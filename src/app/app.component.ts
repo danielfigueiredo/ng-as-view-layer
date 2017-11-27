@@ -1,9 +1,10 @@
 import 'rxjs/add/operator/distinctUntilChanged';
 import { Component } from '@angular/core';
 import { NgRedux } from '@angular-redux/store';
-import { IAppState, store } from './app.reducer';
+import { store } from './app.store';
 import { Router } from '@angular/router';
-import { locationPathSelector } from './app.selectors';
+import { locationPathSelector } from './store/app.selectors';
+import { IAppState, createPingAction, createRouterAction, createFetchJsonAction } from './store';
 
 @Component({
   selector: 'app-root',
@@ -11,26 +12,25 @@ import { locationPathSelector } from './app.selectors';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
+
   title = 'app';
 
   constructor(private ngRedux: NgRedux<IAppState>, private router: Router) {
     ngRedux.provideStore(store);
-    this.ngRedux
-      .select(locationPathSelector)
-      .distinctUntilChanged()
+    this.ngRedux.select(locationPathSelector)
       .subscribe((path: string) => this.router.navigateByUrl(path));
   }
 
   fireTestAction() {
-    this.ngRedux.dispatch({ type: 'SET_TEST_1', payload: 'PING' });
+    this.ngRedux.dispatch(createPingAction('PING'));
   }
 
   changeRoute() {
-    this.ngRedux.dispatch({ type: 'HOME' });
+    this.ngRedux.dispatch(createRouterAction('HOME'));
   }
 
   getJSONMock() {
-    this.ngRedux.dispatch({ type: 'GET_JSON_MOCK' });
+    this.ngRedux.dispatch(createFetchJsonAction());
   }
 
 }
