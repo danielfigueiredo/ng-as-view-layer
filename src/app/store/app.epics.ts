@@ -1,25 +1,20 @@
-import 'rxjs/add/operator/filter';
-import 'rxjs/add/operator/delay';
-import 'rxjs/add/operator/mapTo';
-import 'rxjs/add/operator/switchMap';
-import 'rxjs/add/observable/dom/ajax';
-import { Observable } from 'rxjs/Observable';
-import { combineEpics } from 'redux-observable';
+import 'rxjs/add/operator/mergeMap';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Epic, combineEpics } from 'redux-observable';
 import {
-  createFetchJsonSucceededAction,
-  createPongAction,
-  FETCH_JSON_ACTION_TYPE,
-  PING_ACTION_TYPE,
-} from './app.actions';
+  Action,
+  IAppState,
+} from './app.types';
 
-export const testEpic = (action$: Observable<any>) =>
-  action$.filter(action => action.type === PING_ACTION_TYPE)
-    .delay(3000)
-    .mapTo(createPongAction('PONG'));
+// This example does not have any app level epics so I created a stub one
+// as a placeholder, but normally apps would have some
+const rootEpic: Epic<Action, IAppState> = combineEpics((action$) =>
+  action$.filter(action => action.type === '@@@_NON_EXISTING_ACTION_@@@')
+);
 
-export const getJSONMock = (action$: Observable<any>) =>
-  action$.filter(action => action.type === FETCH_JSON_ACTION_TYPE)
-    .switchMap(() => Observable.ajax('https://jsonplaceholder.typicode.com/posts')
-      .map(json => (createFetchJsonSucceededAction(json))));
+const epic$ = new BehaviorSubject(rootEpic);
 
-export const appEpics = combineEpics(testEpic, getJSONMock);
+export const appEpic: Epic<Action, IAppState> = (action$, store) =>
+  epic$.mergeMap(epic => epic(action$, store, null));
+
+export const injectEpic = (asyncEpic: Epic<Action, IAppState>) => epic$.next(asyncEpic);

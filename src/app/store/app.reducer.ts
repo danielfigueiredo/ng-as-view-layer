@@ -1,15 +1,21 @@
-import { connectRoutes } from 'redux-first-router';
-import createHistory from 'history/createBrowserHistory';
-import { RouterMap } from './app.types';
+import { combineReducers } from 'redux';
+import { routerReducer } from 'app/router';
+import { IAppState } from './app.types';
 
-const routesMap: RouterMap = {
-  HOME: '/home',
+const asyncReducers = {};
+
+export const createRootReducer = () => {
+  return combineReducers<IAppState>({
+    location: routerReducer,
+    ...asyncReducers
+  });
 };
 
-const history = createHistory();
+export const injectReducer = (store, { key, reducer }) => {
+  if (typeof asyncReducers[key] !== 'undefined') {
+    return;
+  }
 
-export const {
-  reducer: routerReducer,
-  middleware: routerMiddleware,
-  enhancer: routerEnhancer,
-} = connectRoutes(history, routesMap);
+  asyncReducers[key] = reducer;
+  store.replaceReducer(createRootReducer());
+};
